@@ -82,7 +82,7 @@ def read_fastq(fastq_file):
     :return: A generator object that iterate the read sequences. 
     """
     with open(fastq_file, "r") as filin:
-        for line in filin:
+    	for line in filin:
             yield next(filin).strip()
             next(filin)
             next(filin)
@@ -121,7 +121,10 @@ def build_graph(kmer_dict):
     :param kmer_dict: A dictionnary object that identify all kmer occurrences.
     :return: A directed graph (nx) of all kmer substring and weight (occurrence).
     """
-    pass
+    digraph = nx.DiGraph()
+    for kmer, count in kmer_dict.items():
+        digraph.add_edge(kmer[:-1], kmer[1:], weight = count) 
+    return digraph
 
 
 def remove_paths(graph, path_list, delete_entry_node, delete_sink_node):
@@ -263,7 +266,9 @@ def main(): # pragma: no cover
     args = get_arguments()
     #for line in read_fastq(args.fastq_file):
     	#print(line)
-    build_kmer_dict(args.fastq_file, 22)
+    dict_of_kmers = build_kmer_dict(args.fastq_file, 250)
+    built_graph = build_graph(dict_of_kmers)
+    draw_graph(built_graph, "test_graph.png")
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit 
