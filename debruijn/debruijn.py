@@ -218,7 +218,14 @@ def get_sink_nodes(graph):
     :param graph: (nx.DiGraph) A directed graph object
     :return: (list) A list of all nodes without successors
     """
-    pass
+    sink_nodes = []
+    for node in graph.nodes():
+        # if the list of predecessors if empty it means it's a starting node
+        # method 2: or check if in_degree of a node is empty
+        if not list(graph.successors(node)):
+            sink_nodes.append(node)
+
+    return sink_nodes
 
 def get_contigs(graph, starting_nodes, ending_nodes):
     """Extract the contigs from the graph
@@ -228,7 +235,20 @@ def get_contigs(graph, starting_nodes, ending_nodes):
     :param ending_nodes: (list) A list of nodes without successors
     :return: (list) List of [contiguous sequence and their length]
     """
-    pass
+    contig_list = []
+    for starting_node in starting_nodes:
+        for ending_node in ending_nodes:
+            if nx.has_path(graph, starting_node, ending_node):
+                for path in nx.all_simple_paths(graph, starting_node, ending_node):
+                    sequence = str(path[0])
+                    for node in path[1:]:
+                        sequence += node[-1]
+                    info = (sequence, len(sequence))
+                    contig_list.append(info)
+    return contig_list
+                
+
+
 
 def save_contigs(contigs_list, output_file):
     """Write all contigs in fasta format
@@ -236,7 +256,9 @@ def save_contigs(contigs_list, output_file):
     :param contig_list: (list) List of [contiguous sequence and their length]
     :param output_file: (str) Path to the output file
     """
-    pass
+    f = open("demofile2.txt", "a")
+    f.write("Now the file has more content!")
+    f.close()
 
 
 def draw_graph(graph, graphimg_file): # pragma: no cover
@@ -273,9 +295,12 @@ def main(): # pragma: no cover
     args = get_arguments()
     #for line in read_fastq(args.fastq_file):
     	#print(line)
-    dict_of_kmers = build_kmer_dict(args.fastq_file, 250)
+    dict_of_kmers = build_kmer_dict(args.fastq_file, 22)
     built_graph = build_graph(dict_of_kmers)
-    draw_graph(built_graph, "test_graph.png")
+    starting = get_starting_nodes(built_graph)
+    ending = get_sink_nodes(built_graph)
+    get_contigs(built_graph, starting, ending)
+    #draw_graph(built_graph, "test_graph.png")
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit 
