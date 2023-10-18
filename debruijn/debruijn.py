@@ -203,7 +203,14 @@ def get_starting_nodes(graph):
     :param graph: (nx.DiGraph) A directed graph object
     :return: (list) A list of all nodes without predecessors
     """
-    pass
+    starting_nodes = []
+    for node in graph.nodes():
+        # if the list of predecessors if empty it means it's a starting node
+        # method 2: or check if in_degree of a node is empty
+        if not list(graph.predecessors(node)):
+            starting_nodes.append(node)
+
+    return starting_nodes
 
 def get_sink_nodes(graph):
     """Get nodes without successors
