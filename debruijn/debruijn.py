@@ -244,6 +244,7 @@ def get_contigs(graph, starting_nodes, ending_nodes):
                     for node in path[1:]:
                         sequence += node[-1]
                     info = (sequence, len(sequence))
+                    print(len(sequence))
                     contig_list.append(info)
     return contig_list
                 
@@ -256,9 +257,11 @@ def save_contigs(contigs_list, output_file):
     :param contig_list: (list) List of [contiguous sequence and their length]
     :param output_file: (str) Path to the output file
     """
-    f = open("demofile2.txt", "a")
-    f.write("Now the file has more content!")
-    f.close()
+    with open(output_file, "w") as filout:
+        for i, (seq, length) in enumerate(contigs_list):
+            filout.write(f">contig_{i} len={length}\n")
+            wrapped_sequence = textwrap.fill(seq, width=80)
+            filout.write(wrapped_sequence + "\n")
 
 
 def draw_graph(graph, graphimg_file): # pragma: no cover
@@ -299,7 +302,8 @@ def main(): # pragma: no cover
     built_graph = build_graph(dict_of_kmers)
     starting = get_starting_nodes(built_graph)
     ending = get_sink_nodes(built_graph)
-    get_contigs(built_graph, starting, ending)
+    all_contigs = get_contigs(built_graph, starting, ending)
+    save_contigs(all_contigs, "contigs.txt")
     #draw_graph(built_graph, "test_graph.png")
 
     # Fonctions de dessin du graphe
