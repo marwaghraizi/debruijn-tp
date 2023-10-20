@@ -27,13 +27,13 @@ import textwrap
 import matplotlib.pyplot as plt
 matplotlib.use("Agg")
 
-__author__ = "Your Name"
+__author__ = "Marwa GHRAIZI"
 __copyright__ = "Universite Paris Diderot"
-__credits__ = ["Your Name"]
+__credits__ = ["Marwa GHRAIZI"]
 __license__ = "GPL"
 __version__ = "1.0.0"
-__maintainer__ = "Your Name"
-__email__ = "your@email.fr"
+__maintainer__ = "Marwa GHRAIZI"
+__email__ = "marwaghraizi@gmail.com"
 __status__ = "Developpement"
 
 def isfile(path): # pragma: no cover
@@ -191,7 +191,8 @@ def solve_bubble(graph, ancestor_node, descendant_node):
     """
     path_list = list(nx.all_simple_paths(graph, ancestor_node, descendant_node))
     path_length = [len(i) for i in path_list]
-    weight_avg_list = [statistics.mean([j[2]['weight'] for j in list(graph.subgraph(i).edges(data=True))]) for i in path_list]
+    #weight_avg_list = [statistics.mean([j[2]['weight'] for j in list(graph.subgraph(i).edges(data=True))]) for i in path_list]
+    weight_avg_list = [path_average_weight(graph, path) for path in path_list]
     solved_bubble = select_best_path(graph, path_list, path_length, weight_avg_list, delete_entry_node=False, delete_sink_node=False)
     return solved_bubble
 
@@ -205,6 +206,7 @@ def simplify_bubbles(graph):
     for node in graph.nodes():
         predecessors = list(graph.predecessors(node))
         if len(predecessors)>1:
+            # getting all predecessor unique combinations
             combinations = [(predecessors[i], predecessors[j]) for i in range(len(predecessors)-1) for j in range(i+1, len(predecessors)) if i != j]
             for combination in combinations:
                 ancestor = nx.lowest_common_ancestor(graph, combination[0], combination[1])
@@ -227,7 +229,24 @@ def solve_entry_tips(graph, starting_nodes):
     :param graph: (nx.DiGraph) A directed graph object
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    for node in graph.nodes():
+        paths = []
+        path_length = []
+        weight_avg_list = []
+        # if the node has one or less predecessors we skip it
+        if len(list(graph.predecessors(node))) > 1:
+            for starting_node in starting_nodes:
+                if nx.has_path(graph, starting_node, node):
+                    for path in nx.all_simple_paths(graph, starting_node, node):
+                        paths.append(path)
+                
+                        path_length.append(len(path))
+                        weight_avg_list.append(path_average_weight(graph, path))
+            break
+    if len(paths) >= 2:
+        # check choose the best and call select best path with True False 
+        graph = solve_entry_tips(select_best_path(graph, paths, path_length, weight_avg_list, delete_entry_node=True, delete_sink_node=False), starting_nodes)
+    return graph
 
 def solve_out_tips(graph, ending_nodes):
     """Remove out tips
@@ -235,7 +254,25 @@ def solve_out_tips(graph, ending_nodes):
     :param graph: (nx.DiGraph) A directed graph object
     :return: (nx.DiGraph) A directed graph object
     """
-    pass
+    for node in graph.nodes():
+        paths = []
+        path_length = []
+        weight_avg_list = []
+        # if the node has one or less predecessors we skip it
+        if len(list(graph.successors(node))) > 1:
+            for ending_node in ending_nodes:
+                if nx.has_path(graph, node, ending_node):
+                    for path in nx.all_simple_paths(graph, node, ending_node):
+                        paths.append(path)
+                
+                        path_length.append(len(path))
+                        weight_avg_list.append(path_average_weight(graph, path))
+            break
+    if len(paths) >= 2:
+        # check choose the best and call select best path with True False 
+        graph = solve_out_tips(select_best_path(graph, paths, path_length, weight_avg_list, delete_entry_node=False, delete_sink_node=True), ending_nodes)
+    return graph
+
 
 def get_starting_nodes(graph):
     """Get nodes without predecessors
@@ -335,18 +372,18 @@ def main(): # pragma: no cover
     Main program function
     """
     # Get arguments
-    args = get_arguments()
     #for line in read_fastq(args.fastq_file):
     	#print(line)
-    args
-    dict_of_kmers = build_kmer_dict(args.fastq_file, 22)
-    built_graph = build_graph(dict_of_kmers)
-    starting = get_starting_nodes(built_graph)
-    ending = get_sink_nodes(built_graph)
-    all_contigs = get_contigs(built_graph, starting, ending)
-    args.output_file
-    save_contigs(all_contigs, "contigs.txt")
-    #draw_graph(built_graph, "test_graph.png")
+    random.seed(1)
+    args = get_arguments()
+    dict_kmer = build_kmer_dict(args.fastq_file, args.kmer_size)
+    print(f" type of dict_kmer : {type(dict_kmer)}")
+    graph = build_graph(dict_kmer)
+    print(graph.number_of_nodes())
+    print(type(graph))
+    start_nodes = get_starting_nodes(graph)
+    end_nodes = get_sink_nodes(graph)
+    graph = simplify_bubbles(graph)
 
     # Fonctions de dessin du graphe
     # A decommenter si vous souhaitez visualiser un petit 
