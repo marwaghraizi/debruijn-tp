@@ -107,7 +107,6 @@ def build_kmer_dict(fastq_file, kmer_size):
     kmer_dict = {}
     for read in read_fastq(fastq_file):
         for kmer in cut_kmer(read, kmer_size):
-            print(kmer)
             if kmer in kmer_dict:
                 kmer_dict[kmer] += 1
             else:
@@ -321,7 +320,6 @@ def get_contigs(graph, starting_nodes, ending_nodes):
                     for node in path[1:]:
                         sequence += node[-1]
                     info = (sequence, len(sequence))
-                    print(len(sequence))
                     contig_list.append(info)
     return contig_list
                 
@@ -372,17 +370,15 @@ def main(): # pragma: no cover
     Main program function
     """
     # Get arguments
-    #for line in read_fastq(args.fastq_file):
-    	#print(line)
+
     random.seed(1)
     args = get_arguments()
     dict_kmer = build_kmer_dict(args.fastq_file, args.kmer_size)
-    print(f" type of dict_kmer : {type(dict_kmer)}")
     graph = build_graph(dict_kmer)
-    print(graph.number_of_nodes())
-    print(type(graph))
     start_nodes = get_starting_nodes(graph)
     end_nodes = get_sink_nodes(graph)
+    contigs = get_contigs(graph, start_nodes, end_nodes)
+    save_contigs(contigs, args.output_file)
     graph = simplify_bubbles(graph)
 
     # Fonctions de dessin du graphe
